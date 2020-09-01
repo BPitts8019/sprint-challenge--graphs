@@ -8,41 +8,57 @@ def isRoomVisited():
 
 
 def buildTraversalPath(world: World):
-    isDeadEnd = False
-    rtn_path = []
     traversal_stack = LifoQueue()
-    visited_rooms = {}
-    opp_direction = {
-        "n": "s",
-        "e": "w",
-        "s": "n",
-        "w": "e"
-    }
+    visited_rooms = set()
 
     traversal_stack.put((world.starting_room, []))
-    while not isDeadEnd and not traversal_stack.empty():
+    while not traversal_stack.empty():
         cur_room, room_path = traversal_stack.get()
         exits = cur_room.get_exits()
-
         if cur_room.id not in visited_rooms:
-            # set connection to previous room as current room id
-            if len(room_path) > 0:
-                prev_room = cur_room.get_room_in_direction(
-                    opp_direction[room_path[-1]])
-                visited_rooms[prev_room.id][room_path[-1]] = cur_room.id
-
-            # add current room to visited
-            visited_rooms[cur_room.id] = {}
-
-            # add each doorway to current room dataset
+            print(cur_room)
+            visited_rooms.add(cur_room.id)
             for direction in exits:
-                visited_rooms[cur_room.id][direction] = None
                 traversal_stack.put((cur_room.get_room_in_direction(
                     direction), room_path + [direction]))
 
-        # if we found a dead end, stop
-        if len(exits) == 1 and len(room_path) > 0 and visited_rooms[cur_room.id][opp_direction[room_path[-1]]] is not None:
-            isDeadEnd = True
-            rtn_path = room_path
+            if len(exits) == 1 and cur_room.get_room_in_direction(exits[0]).id in visited_rooms:
+                return room_path
+    # isDeadEnd = False
+    # rtn_path = []
+    # traversal_stack = LifoQueue()
+    # visited_rooms = {}
+    # opp_direction = {
+    #     "n": "s",
+    #     "e": "w",
+    #     "s": "n",
+    #     "w": "e"
+    # }
 
-    return rtn_path
+    # traversal_stack.put((world.starting_room, []))
+    # while not isDeadEnd and not traversal_stack.empty():
+    #     cur_room, room_path = traversal_stack.get()
+    #     exits = cur_room.get_exits()
+
+    #     if cur_room.id not in visited_rooms:
+    #         # set connection to previous room as current room id
+    #         if len(room_path) > 0:
+    #             prev_room = cur_room.get_room_in_direction(
+    #                 opp_direction[room_path[-1]])
+    #             visited_rooms[prev_room.id][room_path[-1]] = cur_room.id
+
+    #         # add current room to visited
+    #         visited_rooms[cur_room.id] = {}
+
+    #         # add each doorway to current room dataset
+    #         for direction in exits:
+    #             visited_rooms[cur_room.id][direction] = None
+    #             traversal_stack.put((cur_room.get_room_in_direction(
+    #                 direction), room_path + [direction]))
+
+    #     # if we found a dead end, stop
+    #     if len(exits) == 1 and len(room_path) > 0 and visited_rooms[cur_room.id][opp_direction[room_path[-1]]] is not None:
+    #         isDeadEnd = True
+    #         rtn_path = room_path
+
+    # return rtn_path
