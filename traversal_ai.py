@@ -13,7 +13,7 @@ def getUnexploredExits(cur_room, visited_rooms):
     return unexplored_exits
 
 
-def findDeadEnd(starting_room, visited_rooms):
+def findDeadEnd(starting_room, prev_room_id, traversal_path, visited_rooms):
     search_stack = LifoQueue()
     opp_direction = {
         "n": "s",
@@ -22,7 +22,7 @@ def findDeadEnd(starting_room, visited_rooms):
         "w": "e"
     }
 
-    search_stack.put((starting_room, -1, []))
+    search_stack.put((starting_room, prev_room_id, traversal_path))
     while not search_stack.empty():
         cur_room, prev_room_id, room_path = search_stack.get()
         exits = cur_room.get_exits()
@@ -48,37 +48,42 @@ def findDeadEnd(starting_room, visited_rooms):
 
 
 def findNextUnexploredRoom(starting_room, visited_rooms):
-    pass
+    search_queue = Queue()
+    searched_rooms = set()
 
+    search_queue.put((starting_room, []))
+    while not search_queue.empty():
+        cur_room, room_path = search_queue.get()
+        if cur_room.id not in searched_rooms:
+            unexplored_exits = getUnexploredExits(cur_room, visited_rooms)
+            if len(unexplored_exits) > 0:
+                next_direction = random.choice(unexplored_exits)
+                return (cur_room.get_room_in_direction(
+                    next_direction), cur_room.id, room_path + [next_direction])
+            else:
+                searched_rooms.add(cur_room.id)
+                for direction in cur_room.get_exits():
+                    search_queue.put((cur_room.get_room_in_direction(
+                        direction), room_path + [direction]))
 
-# def bft(self, starting_vertex):
-#     """
-#     Print each vertex in breadth-first order
-#     beginning from starting_vertex.
-#     """
-#     search_queue = Queue()
-#     visited_verticies = set()
-
-#     search_queue.put(starting_vertex)
-#     while not search_queue.empty():
-#         cur_vertex = search_queue.get()
-#         if cur_vertex not in visited_verticies:
-#             print(cur_vertex)
-#             visited_verticies.add(cur_vertex)
-#             for connection in self.get_neighbors(cur_vertex):
-#                 search_queue.put(connection)
+    return (None, -1, [])
 
 
 def buildTraversalPath(world: World):
     visited_rooms = {}
     traversal_path = []
     cur_room = world.starting_room
+    prev_room_id = -1
 
     while cur_room is not None:
-        result = findDeadEnd(cur_room, visited_rooms)
+        result = findDeadEnd(cur_room, prev_room_id,
+                             traversal_path, visited_rooms)
         cur_room = result[0]
-        traversal_path += result[1]
+        traversal_path = result[1]
 
-        cur_room = findNextUnexploredRoom(cur_room, visited_rooms)
+        result = findNextUnexploredRoom(cur_room, visited_rooms)
+        cur_room = result[0]
+        prev_room_id = result[1]
+        traversal_path += result[2]
 
     return traversal_path
