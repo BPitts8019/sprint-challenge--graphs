@@ -13,9 +13,8 @@ def getUnexploredExits(cur_room, visited_rooms):
     return unexplored_exits
 
 
-def buildTraversalPath(world: World):
-    traversal_stack = LifoQueue()
-    visited_rooms = {}
+def findDeadEnd(starting_room, visited_rooms):
+    search_stack = LifoQueue()
     opp_direction = {
         "n": "s",
         "e": "w",
@@ -23,9 +22,9 @@ def buildTraversalPath(world: World):
         "w": "e"
     }
 
-    traversal_stack.put((world.starting_room, -1, []))
-    while not traversal_stack.empty():
-        cur_room, prev_room_id, room_path = traversal_stack.get()
+    search_stack.put((starting_room, -1, []))
+    while not search_stack.empty():
+        cur_room, prev_room_id, room_path = search_stack.get()
         exits = cur_room.get_exits()
         if cur_room.id not in visited_rooms:
             print(cur_room)
@@ -39,49 +38,47 @@ def buildTraversalPath(world: World):
 
             if len(exits) == 1 and prev_room_id in visited_rooms:
                 # reached a dead end; go back to a room with unexpolored exits
-                return room_path
+                return (cur_room, room_path)
             else:
                 # choose a random unexplored direction
                 direction = random.choice(
                     getUnexploredExits(cur_room, visited_rooms))
-                traversal_stack.put((cur_room.get_room_in_direction(
+                search_stack.put((cur_room.get_room_in_direction(
                     direction), cur_room.id, room_path + [direction]))
 
-    # isDeadEnd = False
-    # rtn_path = []
-    # traversal_stack = LifoQueue()
-    # visited_rooms = {}
-    # opp_direction = {
-    #     "n": "s",
-    #     "e": "w",
-    #     "s": "n",
-    #     "w": "e"
-    # }
 
-    # traversal_stack.put((world.starting_room, []))
-    # while not isDeadEnd and not traversal_stack.empty():
-    #     cur_room, room_path = traversal_stack.get()
-    #     exits = cur_room.get_exits()
+def findNextUnexploredRoom(starting_room, visited_rooms):
+    pass
 
-    #     if cur_room.id not in visited_rooms:
-    #         # set connection to previous room as current room id
-    #         if len(room_path) > 0:
-    #             prev_room = cur_room.get_room_in_direction(
-    #                 opp_direction[room_path[-1]])
-    #             visited_rooms[prev_room.id][room_path[-1]] = cur_room.id
 
-    #         # add current room to visited
-    #         visited_rooms[cur_room.id] = {}
+# def bft(self, starting_vertex):
+#     """
+#     Print each vertex in breadth-first order
+#     beginning from starting_vertex.
+#     """
+#     search_queue = Queue()
+#     visited_verticies = set()
 
-    #         # add each doorway to current room dataset
-    #         for direction in exits:
-    #             visited_rooms[cur_room.id][direction] = None
-    #             traversal_stack.put((cur_room.get_room_in_direction(
-    #                 direction), room_path + [direction]))
+#     search_queue.put(starting_vertex)
+#     while not search_queue.empty():
+#         cur_vertex = search_queue.get()
+#         if cur_vertex not in visited_verticies:
+#             print(cur_vertex)
+#             visited_verticies.add(cur_vertex)
+#             for connection in self.get_neighbors(cur_vertex):
+#                 search_queue.put(connection)
 
-    #     # if we found a dead end, stop
-    #     if len(exits) == 1 and len(room_path) > 0 and visited_rooms[cur_room.id][opp_direction[room_path[-1]]] is not None:
-    #         isDeadEnd = True
-    #         rtn_path = room_path
 
-    # return rtn_path
+def buildTraversalPath(world: World):
+    visited_rooms = {}
+    traversal_path = []
+    cur_room = world.starting_room
+
+    while cur_room is not None:
+        result = findDeadEnd(cur_room, visited_rooms)
+        cur_room = result[0]
+        traversal_path += result[1]
+
+        cur_room = findNextUnexploredRoom(cur_room, visited_rooms)
+
+    return traversal_path
