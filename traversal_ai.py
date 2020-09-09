@@ -4,6 +4,10 @@ from room import Room
 import random
 
 
+def isMoreToExplore(cur_room, visited_rooms):
+    return len(getUnexploredExits(cur_room, visited_rooms)) > 0
+
+
 def getUnexploredExits(cur_room, visited_rooms):
     unexplored_exits = []
     for direction in cur_room.get_exits():
@@ -25,24 +29,23 @@ def findDeadEnd(starting_room, prev_room_id, traversal_path, visited_rooms):
     search_stack.put((starting_room, prev_room_id, traversal_path))
     while not search_stack.empty():
         cur_room, prev_room_id, room_path = search_stack.get()
-        exits = cur_room.get_exits()
-        if cur_room.id not in visited_rooms:
-            print(cur_room)
-            # Mark room as visited
-            visited_rooms[cur_room.id] = set()
+        if cur_room.id not in visited_rooms or isMoreToExplore(cur_room, visited_rooms):
+            if cur_room.id not in visited_rooms:
+                # Mark room as visited
+                visited_rooms[cur_room.id] = set()
 
             # Mark directions moved as explored
             if len(room_path) > 0:
                 visited_rooms[prev_room_id].add(room_path[-1])
                 visited_rooms[cur_room.id].add(opp_direction[room_path[-1]])
 
-            if len(exits) == 1 and prev_room_id in visited_rooms:
+            unexplored_exits = getUnexploredExits(cur_room, visited_rooms)
+            if len(unexplored_exits) == 0:
                 # reached a dead end; go back to a room with unexpolored exits
                 return (cur_room, room_path)
             else:
                 # choose a random unexplored direction
-                direction = random.choice(
-                    getUnexploredExits(cur_room, visited_rooms))
+                direction = random.choice(unexplored_exits)
                 search_stack.put((cur_room.get_room_in_direction(
                     direction), cur_room.id, room_path + [direction]))
 
